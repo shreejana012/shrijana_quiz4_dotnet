@@ -9,71 +9,32 @@
 # https://docs.microsoft.com/azure/devops/pipelines/apps/aspnet/build-aspnet-4
 
 trigger:
-- main
+- main  # or 'master', depending on your default branch
 
 pool:
   vmImage: 'windows-latest'
 
 variables:
   buildConfiguration: 'Release'
-  Major: '1'
-  Minor: '0'
-  Patch: '0'
-  PackageVersion: '$(Major).$(Minor).$(Patch)'
-  dotNetVersion: '8.0.x'
-  projectPath: 'Quiz4WebApp.csproj'
 
 steps:
-# Install .NET 8 SDK
 - task: UseDotNet@2
-  displayName: 'Install .NET 8 SDK'
   inputs:
-    version: '$(dotNetVersion)'
     packageType: 'sdk'
+    version: '8.0.x'
+    installationPath: $(Agent.ToolsDirectory)/dotnet
 
-# Restore packages
-- task: DotNetCoreCLI@2
-  displayName: 'Restore'
-  inputs:
-    command: 'restore'
-    projects: '$(projectPath)'
+- script: dotnet restore
+  displayName: 'Restore NuGet packages'
 
-# Build solution
-- task: DotNetCoreCLI@2
-  displayName: 'Build'
-  inputs:
-    command: 'build'
-    projects: '$(projectPath)'
-    arguments: '--configuration $(buildConfiguration)'
+- script: dotnet build --configuration $(buildConfiguration)
+  displayName: 'Build project'
 
-# Create NuGet package
-- task: DotNetCoreCLI@2
-  displayName: 'Pack'
-  inputs:
-    command: 'pack'
-    packagesToPack: '$(projectPath)'
-    versioningScheme: 'byEnvVar'
-    versionEnvVar: 'PackageVersion'
-    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
-    nobuild: true
+- script: dotnet publish -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)
+  displayName: 'Publish project'
 
-# Authenticate with Azure Artifacts
-- task: NuGetAuthenticate@1
-  displayName: 'Authenticate with Azure Artifacts'
-
-# Push package to newly created feed
-- task: NuGetCommand@2
-  displayName: 'Push'
-  inputs:
-    command: 'push'
-    packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg'
-    nuGetFeedType: 'internal'
-    publishVstsFeed: 'shrijana_quiz4_agile/Quiz4Feed' 
-    allowPackageConflicts: true
-
-# Publish build artifacts
 - task: PublishBuildArtifacts@1
-  displayName: 'Publish Artifact'
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    ArtifactName: 'drop'
+    ArtifactName: 'shrijana_quiz4_agile/Quiz4Feed'
+    publishLocation: 'Container'
