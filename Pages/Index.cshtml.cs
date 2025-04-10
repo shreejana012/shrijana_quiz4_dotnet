@@ -6,6 +6,7 @@ namespace Quiz4WebApp.Pages;
 public class IndexModel : PageModel
 {
     private readonly ILogger<IndexModel> _logger;
+    public string Message { get; set; }
 
     public IndexModel(ILogger<IndexModel> logger)
     {
@@ -14,6 +15,6 @@ public class IndexModel : PageModel
 
    public void OnGet()
     {
-        Message = "Database access has already been done on April 1, 2025 by John Doe";
+        Message = "Database access has already been done on April 1, 2025 by Shrijana Poudel";
     }
 }
